@@ -1,9 +1,6 @@
-// app.js
-
 const express = require('express');
 const fs = require('fs');
-const path = require('path'); // 한 번만 선언
-const { onGameMove } = require('./update_github_readme'); // 추가된 부분
+const path = require('path');
 const app = express();
 app.use(express.json());
 
@@ -12,13 +9,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const BOARD_SIZE = 15;
 
-// 보드 초기화 함수
 function initializeBoard() {
   try {
     const data = fs.readFileSync('board.json', 'utf8');
     return JSON.parse(data);
   } catch (e) {
-    return Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill('⬜️'));
+    // 기본 보드 생성
+    const newBoard = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill('⬜️'));
+    fs.writeFileSync('board.json', JSON.stringify(newBoard));  // board.json 파일 생성
+    return newBoard;
   }
 }
 
@@ -85,8 +84,7 @@ app.post('/move', (req, res) => {
   board[y][x] = stone;
   saveBoard();
 
-  // GitHub README 업데이트
-  onGameMove(board); // 추가된 부분
+  // GitHub README 업데이트는 이제 서버에서 호출하지 않습니다.
 
   if (checkWin(x, y, stone)) {
     board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill('⬜️'));
