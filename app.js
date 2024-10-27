@@ -1,6 +1,8 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const { exec } = require('child_process');
+const https = require('https');
 const app = express();
 app.use(express.json());
 
@@ -68,6 +70,38 @@ function checkWin(x, y, stone) {
   return false;
 }
 
+// GitHub Actions 트리거 함수
+function triggerGithubAction() {
+  const token = process.env.MY_GITHUB_TOKEN;
+  const options = {
+    hostname: 'api.github.com',
+    port: 443,
+    path: '/repos/jehoonje/jehoonje/dispatches',
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'User-Agent': 'Omok-Server',
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+    },
+  };
+
+  const req = https.request(options, (res) => {
+    if (res.statusCode === 204) {
+      console.log('GitHub Actions workflow triggered successfully.');
+    } else {
+      console.error(`Failed to trigger GitHub Actions: ${res.statusCode}`);
+    }
+  });
+
+  req.on('error', (error) => {
+    console.error('Error triggering GitHub Action:', error);
+  });
+
+  req.write(JSON.stringify({ event_type: 'update_readme' }));
+  req.end();
+}
+
 // 돌 놓기 엔드포인트
 app.post('/move', (req, res) => {
   const { x, y } = req.body;
@@ -89,18 +123,9 @@ app.post('/move', (req, res) => {
     saveBoard();
     res.json({ message: `${stone} 승리! 게임이 리셋됩니다.`, reset: true });
     currentTurn = '⚫️'; // 게임 리셋 후 초기 플레이어로 설정
-    
-    // GitHub README 업데이트 트리거
-    exec('node update_readme.js', (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error updating README: ${error.message}`);
-      }
-      if (stderr) {
-        console.error(`Stderr: ${stderr}`);
-      }
-      console.log(`Stdout: ${stdout}`);
-    });
-    
+
+    // 승리 시 GitHub Actions 트리거
+    triggerGithubAction();
     return;
   }
 
@@ -108,16 +133,8 @@ app.post('/move', (req, res) => {
   currentTurn = currentTurn === '⚫️' ? '⚪️' : '⚫️';
   res.json({ message: `${stone} 돌을 (${x}, ${y})에 놓았습니다.`, reset: false });
 
-  // GitHub README 업데이트 트리거
-  exec('node update_readme.js', (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error updating README: ${error.message}`);
-    }
-    if (stderr) {
-      console.error(`Stderr: ${stderr}`);
-    }
-    console.log(`Stdout: ${stdout}`);
-  });
+  // 말이 놓일 때마다 GitHub Actions 트리거
+  triggerGithubAction();
 });
 
 // 보드 상태 가져오기 엔드포인트
