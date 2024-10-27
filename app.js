@@ -84,19 +84,40 @@ app.post('/move', (req, res) => {
   board[y][x] = stone;
   saveBoard();
 
-  // GitHub README 업데이트는 이제 서버에서 호출하지 않습니다.
-
   if (checkWin(x, y, stone)) {
     board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill('⬜️'));
     saveBoard();
     res.json({ message: `${stone} 승리! 게임이 리셋됩니다.`, reset: true });
     currentTurn = '⚫️'; // 게임 리셋 후 초기 플레이어로 설정
+    
+    // GitHub README 업데이트 트리거
+    exec('node update_readme.js', (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error updating README: ${error.message}`);
+      }
+      if (stderr) {
+        console.error(`Stderr: ${stderr}`);
+      }
+      console.log(`Stdout: ${stdout}`);
+    });
+    
     return;
   }
 
   // 턴 전환
   currentTurn = currentTurn === '⚫️' ? '⚪️' : '⚫️';
   res.json({ message: `${stone} 돌을 (${x}, ${y})에 놓았습니다.`, reset: false });
+
+  // GitHub README 업데이트 트리거
+  exec('node update_readme.js', (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error updating README: ${error.message}`);
+    }
+    if (stderr) {
+      console.error(`Stderr: ${stderr}`);
+    }
+    console.log(`Stdout: ${stdout}`);
+  });
 });
 
 // 보드 상태 가져오기 엔드포인트
