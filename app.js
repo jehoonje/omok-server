@@ -1,13 +1,9 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
 const https = require('https');
 const app = express();
 app.use(express.json());
-
-// 정적 파일 제공
-app.use(express.static(path.join(__dirname, 'public')));
 
 const BOARD_SIZE = 15;
 
@@ -16,37 +12,25 @@ function initializeBoard() {
     const data = fs.readFileSync('board.json', 'utf8');
     return JSON.parse(data);
   } catch (e) {
-    // 기본 보드 생성
     const newBoard = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill('⬜️'));
-    fs.writeFileSync('board.json', JSON.stringify(newBoard));  // board.json 파일 생성
+    fs.writeFileSync('board.json', JSON.stringify(newBoard));
     return newBoard;
   }
 }
 
-// 게임 보드 초기화 또는 로드
 let board = initializeBoard();
-
-// 보드 저장 함수
-function saveBoard() {
-  fs.writeFileSync('board.json', JSON.stringify(board));
-}
-
-// 현재 턴 추적
 let currentTurn = '⚫️';
 
-// 승리 조건 검사 함수
 function checkWin(x, y, stone) {
   const directions = [
-    { dx: 1, dy: 0 },  // 가로
-    { dx: 0, dy: 1 },  // 세로
-    { dx: 1, dy: 1 },  // 대각선 \
-    { dx: 1, dy: -1 }  // 대각선 /
+    { dx: 1, dy: 0 },
+    { dx: 0, dy: 1 },
+    { dx: 1, dy: 1 },
+    { dx: 1, dy: -1 }
   ];
 
   for (const { dx, dy } of directions) {
     let count = 1;
-
-    // 한 방향 체크
     for (let step = 1; step < 5; step++) {
       const nx = x + dx * step;
       const ny = y + dy * step;
@@ -54,8 +38,6 @@ function checkWin(x, y, stone) {
       if (board[ny][nx] !== stone) break;
       count++;
     }
-
-    // 반대 방향 체크
     for (let step = 1; step < 5; step++) {
       const nx = x - dx * step;
       const ny = y - dy * step;
@@ -63,16 +45,19 @@ function checkWin(x, y, stone) {
       if (board[ny][nx] !== stone) break;
       count++;
     }
-
     if (count >= 5) return true;
   }
-
   return false;
 }
 
 // GitHub Actions 트리거 함수
 function triggerGithubAction() {
   const token = process.env.MY_GITHUB_TOKEN;
+  if (!token) {
+    console.error('Error: MY_GITHUB_TOKEN 환경 변수가 설정되지 않았습니다.');
+    return;
+  }
+
   const options = {
     hostname: 'api.github.com',
     port: 443,
@@ -116,13 +101,13 @@ app.post('/move', (req, res) => {
   }
 
   board[y][x] = stone;
-  saveBoard();
+  fs.writeFileSync('board.json', JSON.stringify(board));
 
   if (checkWin(x, y, stone)) {
     board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill('⬜️'));
-    saveBoard();
+    fs.writeFileSync('board.json', JSON.stringify(board));
     res.json({ message: `${stone} 승리! 게임이 리셋됩니다.`, reset: true });
-    currentTurn = '⚫️'; // 게임 리셋 후 초기 플레이어로 설정
+    currentTurn = '⚫️';
 
     // 승리 시 GitHub Actions 트리거
     triggerGithubAction();
@@ -133,7 +118,7 @@ app.post('/move', (req, res) => {
   currentTurn = currentTurn === '⚫️' ? '⚪️' : '⚫️';
   res.json({ message: `${stone} 돌을 (${x}, ${y})에 놓았습니다.`, reset: false });
 
-  // 말이 놓일 때마다 GitHub Actions 트리거
+  // 돌 놓을 때마다 GitHub Actions 트리거
   triggerGithubAction();
 });
 
