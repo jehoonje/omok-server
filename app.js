@@ -97,3 +97,14 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+// Root route to respond to GET requests at '/'
+app.get('/', (req, res) => {
+  res.send('Welcome to the Omok Game!');
+});
+
+// Additional game routes go here
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
