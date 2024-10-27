@@ -4,7 +4,13 @@ const path = require('path'); // 정적 파일 제공을 위한 path 모듈
 const app = express();
 app.use(express.json());
 
+
+app.get('/', (req, res) => {
+  res.send('Welcome to the Omok Game!');
+});
+
 // 정적 파일 제공
+const path = require('path');
 app.use(express.static(path.join(__dirname, 'public')));
 
 const BOARD_SIZE = 15;
