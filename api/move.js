@@ -37,7 +37,7 @@ async function getBoard() {
 
 async function updateBoard(board) {
   try {
-    // Get the current file SHA
+    // 현재 파일 SHA 가져오기
     const { data: currentData } = await octokit.repos.getContent({
       owner: REPO_OWNER,
       repo: REPO_NAME,
