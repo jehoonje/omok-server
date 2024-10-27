@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>오목 게임</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    table {
+      border-collapse: collapse;
+      margin: 0 auto;
+    }
+    td {
+      width: 30px;
+      height: 30px;
+      text-align: center;
+      font-size: 24px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+    }
+    #currentPlayer {
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>오목 게임</h1>
+  <div id="currentPlayer">현재 플레이어: ⚫️</div>
+  <table id="board">
+    <!-- 보드가 여기에 표시됩니다 -->
+  </table>
+
+  <script>
+    const BOARD_SIZE = 15;
+    let board = [];
+    let currentPlayer = '⚫️';
+
+    // 서버에서 보드 상태 가져오기
+    function fetchBoard() {
+      fetch('/board')
+        .then(response => response.json())
+        .then(data => {
+          board = data.board;
+          currentPlayer = getCurrentPlayer();
+          drawBoard();
+          updateCurrentPlayer();
+        })
+        .catch(error => console.error('Error fetching board:', error));
+    }
+
+    // 보드 그리기
+    function drawBoard() {
+      const table = document.getElementById('board');
+      table.innerHTML = '';
+
+      for (let y = 0; y < BOARD_SIZE; y++) {
+        const tr = document.createElement('tr');
+        for (let x = 0; x < BOARD_SIZE; x++) {
+          const td = document.createElement('td');
+          td.textContent = board[y][x];
+          td.addEventListener('click', () => placeStone(x, y));
+          tr.appendChild(td);
+        }
+        table.appendChild(tr);
+      }
+    }
+
+    // 돌 놓기
+    function placeStone(x, y) {
+      if (board[y][x] !== '⬜️') {
+        alert('이미 돌이 놓인 자리입니다.');
+        return;
+      }
+
+      fetch('/move', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ x, y })
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert(data.message);
+        fetchBoard();
+      })
+      .catch(error => console.error('Error placing stone:', error));
+    }
+
+    // 현재 플레이어 업데이트
+    function updateCurrentPlayer() {
+      document.getElementById('currentPlayer').textContent = `현재 플레이어: ${currentPlayer}`;
+    }
+
+    // 현재 플레이어 계산
+    function getCurrentPlayer() {
+      const flatBoard = board.flat();
+      const blackCount = flatBoard.filter(cell => cell === '⚫️').length;
+      const whiteCount = flatBoard.filter(cell => cell === '⚪️').length;
+      return blackCount <= whiteCount ? '⚫️' : '⚪️';
+    }
+
+    // 페이지 로드 시 보드 상태 가져오기
+    window.onload = fetchBoard;
+  </script>
+</body>
+</html>

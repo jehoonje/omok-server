@@ -1,6 +1,7 @@
 {
   "name": "omok-server",
   "version": "1.0.0",
+  "description": "오목 게임 서버",
   "main": "app.js",
   "scripts": {
     "start": "node app.js"

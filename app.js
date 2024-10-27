@@ -1,7 +1,11 @@
 const express = require('express');
 const fs = require('fs');
+const path = require('path'); // 정적 파일 제공을 위한 path 모듈
 const app = express();
 app.use(express.json());
+
+// 정적 파일 제공
+app.use(express.static(path.join(__dirname, 'public')));
 
 const BOARD_SIZE = 15;
 
@@ -92,10 +96,10 @@ app.get('/board', (req, res) => {
   res.json({ board });
 });
 
-// Root route to respond to GET requests at '/'
-app.get('/', (req, res) => {
-  res.send('Welcome to the Omok Game!');
-});
+// Root route는 정적 파일이 자동으로 제공되므로 삭제하거나 주석 처리
+// app.get('/', (req, res) => {
+//   res.send('Welcome to the Omok Game!');
+// });
 
 // 서버 시작
 const PORT = process.env.PORT || 3000;
