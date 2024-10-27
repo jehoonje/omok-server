@@ -22,13 +22,8 @@ function saveBoard() {
   fs.writeFileSync('board.json', JSON.stringify(board));
 }
 
-// 현재 플레이어 계산
-function getCurrentPlayer() {
-  const flatBoard = board.flat();
-  const blackCount = flatBoard.filter(cell => cell === '⚫️').length;
-  const whiteCount = flatBoard.filter(cell => cell === '⚪️').length;
-  return blackCount <= whiteCount ? '⚫️' : '⚪️';
-}
+// 현재 턴 추적
+let currentTurn = '⚫️';
 
 // 승리 조건 검사 함수
 function checkWin(x, y, stone) {
@@ -69,7 +64,7 @@ function checkWin(x, y, stone) {
 // 돌 놓기 엔드포인트
 app.post('/move', (req, res) => {
   const { x, y } = req.body;
-  const stone = getCurrentPlayer();
+  const stone = currentTurn;
 
   if (x < 0 || y < 0 || x >= BOARD_SIZE || y >= BOARD_SIZE) {
     return res.status(400).json({ message: '잘못된 위치입니다.' });
@@ -85,10 +80,14 @@ app.post('/move', (req, res) => {
   if (checkWin(x, y, stone)) {
     board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill('⬜️'));
     saveBoard();
-    return res.json({ message: `${stone} 승리! 게임이 리셋됩니다.` });
+    res.json({ message: `${stone} 승리! 게임이 리셋됩니다.`, reset: true });
+    currentTurn = '⚫️'; // 게임 리셋 후 초기 플레이어로 설정
+    return;
   }
 
-  res.json({ message: `${stone} 돌을 (${x}, ${y})에 놓았습니다.` });
+  // 턴 전환
+  currentTurn = currentTurn === '⚫️' ? '⚪️' : '⚫️';
+  res.json({ message: `${stone} 돌을 (${x}, ${y})에 놓았습니다.`, reset: false });
 });
 
 // 보드 상태 가져오기 엔드포인트

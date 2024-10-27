@@ -8,22 +8,33 @@
       font-family: Arial, sans-serif;
       text-align: center;
       margin-top: 50px;
+      background-color: #f0f0f0;
     }
     table {
       border-collapse: collapse;
       margin: 0 auto;
+      background-color: #fff;
     }
     td {
-      width: 30px;
-      height: 30px;
+      width: 40px;
+      height: 40px;
       text-align: center;
       font-size: 24px;
       cursor: pointer;
       border: 1px solid #ccc;
     }
+    td:hover {
+      background-color: #e0e0e0;
+    }
     #currentPlayer {
       margin-bottom: 20px;
       font-size: 18px;
+      font-weight: bold;
+    }
+    #message {
+      margin-top: 20px;
+      font-size: 16px;
+      color: green;
     }
   </style>
 </head>
@@ -33,11 +44,18 @@
   <table id="board">
     <!-- 보드가 여기에 표시됩니다 -->
   </table>
+  <div id="message"></div>
 
   <script>
     const BOARD_SIZE = 15;
     let board = [];
     let currentPlayer = '⚫️';
+
+    // 메시지 표시 함수
+    function showMessage(message) {
+      const messageDiv = document.getElementById('message');
+      messageDiv.textContent = message;
+    }
 
     // 서버에서 보드 상태 가져오기
     function fetchBoard() {
@@ -72,7 +90,7 @@
     // 돌 놓기
     function placeStone(x, y) {
       if (board[y][x] !== '⬜️') {
-        alert('이미 돌이 놓인 자리입니다.');
+        showMessage('이미 돌이 놓인 자리입니다.');
         return;
       }
 
@@ -83,7 +101,7 @@
       })
       .then(response => response.json())
       .then(data => {
-        alert(data.message);
+        showMessage(data.message);
         fetchBoard();
       })
       .catch(error => console.error('Error placing stone:', error));
