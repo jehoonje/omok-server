@@ -27,7 +27,7 @@ const END = '<!-- BOARD END -->';
 // 보드 상태를 가져오는 함수
 async function fetchBoard() {
   return new Promise((resolve, reject) => {
-    https.get('https://omok-game-app-ea4b1b706acd.herokuapp.com/board', (res) => {
+    https.get('https://omok-game.vercel.app/api/board', (res) => {
       let data = '';
 
       if (res.statusCode !== 200) {
