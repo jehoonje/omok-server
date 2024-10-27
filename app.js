@@ -12,13 +12,18 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const BOARD_SIZE = 15;
 
-// 게임 보드 초기화 또는 로드
-let board;
-try {
-  board = JSON.parse(fs.readFileSync('board.json', 'utf8'));
-} catch (e) {
-  board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill('⬜️'));
+// 보드 초기화 함수
+function initializeBoard() {
+  try {
+    const data = fs.readFileSync('board.json', 'utf8');
+    return JSON.parse(data);
+  } catch (e) {
+    return Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill('⬜️'));
+  }
 }
+
+// 게임 보드 초기화 또는 로드
+let board = initializeBoard();
 
 // 보드 저장 함수
 function saveBoard() {

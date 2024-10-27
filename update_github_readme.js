@@ -1,7 +1,5 @@
 // update_github_readme.js
 const https = require('https');
-const fs = require('fs');
-const path = require('path');
 
 // GitHub 레포지토리 정보
 const REPO_OWNER = 'jehoonje';
@@ -138,6 +136,4 @@ function onGameMove(board) {
   });
 }
 
-// 예시: 게임에서 돌을 놓을 때마다 onGameMove 함수를 호출
-// 실제 게임 로직에 맞게 이 함수를 호출하도록 수정하세요.
 module.exports = { onGameMove };
